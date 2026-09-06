@@ -37682,6 +37682,77 @@ var getPreservedRoutedSubcircuitTraces = ({
   };
 }).filter((trace) => trace.route.length >= 2);
 
+// lib/utils/autorouting/getPhysicallyConnectedPcbTracePortGroups.ts
+import { segmentToSegmentMinDistance as segmentToSegmentMinDistance3 } from "@tscircuit/math-utils";
+var getConstantWidthWireSegments = (trace) => {
+  const firstPoint = trace.route[0];
+  if (trace.route_thickness_mode === "interpolated" || firstPoint?.route_type !== "wire" || trace.route.some(
+    (point6) => point6.route_type !== "wire" || point6.width !== firstPoint.width
+  )) {
+    return [];
+  }
+  return trace.route.flatMap((point6, pointIndex) => {
+    if (point6.route_type !== "wire") return [];
+    const nextPoint = trace.route[pointIndex + 1];
+    const end = nextPoint?.route_type === "wire" && nextPoint.layer === point6.layer ? nextPoint : point6;
+    return [{ start: point6, end, layer: point6.layer, width: point6.width }];
+  });
+};
+var getPhysicallyConnectedPcbTracePortGroups = ({
+  traces,
+  connMap
+}) => {
+  const traceCopper = traces.map((trace) => ({
+    net: trace.source_trace_id ? connMap.getNetConnectedToId(trace.source_trace_id) : void 0,
+    segments: getConstantWidthWireSegments(trace),
+    portIds: new Set(
+      trace.route.flatMap(
+        (point6) => point6.route_type === "wire" ? [point6.start_pcb_port_id, point6.end_pcb_port_id].filter(
+          (portId) => portId !== void 0
+        ) : []
+      )
+    )
+  }));
+  const parents = traces.map((_, traceIndex) => traceIndex);
+  const findRoot = (traceIndex) => {
+    while (parents[traceIndex] !== traceIndex) {
+      parents[traceIndex] = parents[parents[traceIndex]];
+      traceIndex = parents[traceIndex];
+    }
+    return traceIndex;
+  };
+  for (let firstIndex = 0; firstIndex < traceCopper.length; firstIndex++) {
+    const first = traceCopper[firstIndex];
+    if (!first.net) continue;
+    for (let secondIndex = 0; secondIndex < firstIndex; secondIndex++) {
+      const second = traceCopper[secondIndex];
+      if (first.net !== second.net) continue;
+      const firstRoot = findRoot(firstIndex);
+      const secondRoot = findRoot(secondIndex);
+      if (firstRoot === secondRoot) continue;
+      const copperTouches = first.segments.some(
+        (firstSegment) => second.segments.some(
+          (secondSegment) => firstSegment.layer === secondSegment.layer && segmentToSegmentMinDistance3(
+            firstSegment.start,
+            firstSegment.end,
+            secondSegment.start,
+            secondSegment.end
+          ) <= (firstSegment.width + secondSegment.width) / 2
+        )
+      );
+      if (copperTouches) parents[firstRoot] = secondRoot;
+    }
+  }
+  const portIdsByRoot = /* @__PURE__ */ new Map();
+  for (let traceIndex = 0; traceIndex < traceCopper.length; traceIndex++) {
+    const root = findRoot(traceIndex);
+    const portIds = portIdsByRoot.get(root) ?? /* @__PURE__ */ new Set();
+    for (const portId of traceCopper[traceIndex].portIds) portIds.add(portId);
+    portIdsByRoot.set(root, portIds);
+  }
+  return [...portIdsByRoot.values()].filter((portIds) => portIds.size >= 2).map((portIds) => [...portIds]);
+};
+
 // lib/utils/autorouting/getUnbrokenCopperPourObstacles.ts
 var COPPER_POUR_RECT_HEIGHT = 0.5;
 var dedupeStrings = (values) => Array.from(new Set(values.filter((value) => Boolean(value))));
@@ -38335,14 +38406,12 @@ var getSimpleRouteJsonFromCircuitJson = ({
     const existingTraces = db.pcb_trace.list().filter((t) => {
       return relevantSubcircuitIds?.has(t.subcircuit_id);
     });
-    for (const tr of existingTraces) {
-      const tracePortIds = /* @__PURE__ */ new Set();
-      for (const seg of tr.route) {
-        if (seg.start_pcb_port_id) tracePortIds.add(seg.start_pcb_port_id);
-        if (seg.end_pcb_port_id) tracePortIds.add(seg.end_pcb_port_id);
-      }
-      if (tracePortIds.size < 2) continue;
-      const firstId = tracePortIds.values().next().value;
+    const physicallyConnectedPortGroups = getPhysicallyConnectedPcbTracePortGroups({
+      traces: existingTraces,
+      connMap: sharedConnMap
+    });
+    for (const tracePortIds of physicallyConnectedPortGroups) {
+      const firstId = tracePortIds[0];
       if (!firstId) continue;
       const conn = pointIdToConn.get(firstId);
       if (!conn) continue;

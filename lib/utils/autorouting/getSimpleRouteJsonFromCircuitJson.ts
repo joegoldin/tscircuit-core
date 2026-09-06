@@ -33,6 +33,7 @@ import {
 } from "./getBusesForSimpleRouteJson"
 import { getDifferentialPairsForSimpleRouteJson } from "./getDifferentialPairsForSimpleRouteJson"
 import { getPreservedRoutedSubcircuitTraces } from "./getPreservedRoutedSubcircuitTraces"
+import { getPhysicallyConnectedPcbTracePortGroups } from "./getPhysicallyConnectedPcbTracePortGroups"
 import { getUnbrokenCopperPourObstacles } from "./getUnbrokenCopperPourObstacles"
 
 const getOwningPcbBoardForSubcircuit = (
@@ -852,15 +853,13 @@ export const getSimpleRouteJsonFromCircuitJson = ({
       return relevantSubcircuitIds?.has(t.subcircuit_id!)
     })
 
-    for (const tr of existingTraces) {
-      const tracePortIds = new Set<string>()
-      for (const seg of tr.route as any[]) {
-        if (seg.start_pcb_port_id) tracePortIds.add(seg.start_pcb_port_id)
-        if (seg.end_pcb_port_id) tracePortIds.add(seg.end_pcb_port_id)
-      }
-      if (tracePortIds.size < 2) continue
-
-      const firstId = tracePortIds.values().next().value
+    const physicallyConnectedPortGroups =
+      getPhysicallyConnectedPcbTracePortGroups({
+        traces: existingTraces,
+        connMap: sharedConnMap,
+      })
+    for (const tracePortIds of physicallyConnectedPortGroups) {
+      const firstId = tracePortIds[0]
       if (!firstId) continue
       const conn = pointIdToConn.get(firstId)
       if (!conn) continue
