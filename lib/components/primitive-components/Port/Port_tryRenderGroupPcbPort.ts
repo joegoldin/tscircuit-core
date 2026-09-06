@@ -12,10 +12,16 @@ export function Port_tryRenderGroupPcbPort(port: Port): boolean {
   )
   const matchedPrimitiveCenter =
     matchedPcbPrimitives.length === 1
-      ? matchedPcbPrimitives[0]._getPcbCircuitJsonBounds().center
+      ? getCenterOfPcbPrimitives(
+          matchedPcbPrimitives,
+          port.getAvailablePcbLayers(),
+        )
       : matchedPcbPrimitives.length > 1 &&
           areAllPcbPrimitivesOverlapping(matchedPcbPrimitives)
-        ? getCenterOfPcbPrimitives(matchedPcbPrimitives)
+        ? getCenterOfPcbPrimitives(
+            matchedPcbPrimitives,
+            port.getAvailablePcbLayers(),
+          )
         : null
 
   if (matchedPrimitiveCenter) {

@@ -512,7 +512,10 @@ export class Port extends PrimitiveComponent<typeof portProps> {
     let matchCenter: { x: number; y: number } | null = null
 
     if (pcbMatches.length === 1) {
-      matchCenter = pcbMatches[0]._getPcbCircuitJsonBounds().center
+      matchCenter = getCenterOfPcbPrimitives(
+        pcbMatches,
+        this.getAvailablePcbLayers(),
+      )
     }
 
     if (pcbMatches.length > 1) {
@@ -540,7 +543,10 @@ export class Port extends PrimitiveComponent<typeof portProps> {
         return
       }
 
-      matchCenter = getCenterOfPcbPrimitives(pcbMatches)
+      matchCenter = getCenterOfPcbPrimitives(
+        pcbMatches,
+        this.getAvailablePcbLayers(),
+      )
     }
 
     if (matchCenter) {
@@ -588,12 +594,18 @@ export class Port extends PrimitiveComponent<typeof portProps> {
 
     let matchCenter: { x: number; y: number } | null = null
     if (pcbMatches.length === 1) {
-      matchCenter = pcbMatches[0]._getPcbCircuitJsonBounds().center
+      matchCenter = getCenterOfPcbPrimitives(
+        pcbMatches,
+        this.getAvailablePcbLayers(),
+      )
     }
     if (pcbMatches.length > 1) {
       try {
         if (areAllPcbPrimitivesOverlapping(pcbMatches as any)) {
-          matchCenter = getCenterOfPcbPrimitives(pcbMatches as any)
+          matchCenter = getCenterOfPcbPrimitives(
+            pcbMatches as any,
+            this.getAvailablePcbLayers(),
+          )
         }
       } catch {}
     }
