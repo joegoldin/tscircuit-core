@@ -1,6 +1,7 @@
 import { getUnitVectorFromDirection } from "@tscircuit/math-utils"
 import type { PinLabelsProp } from "@tscircuit/props"
-import type { AnyCircuitElement, SchematicComponent } from "circuit-json"
+import type { AnyCircuitElement, PcbSmtPad, SchematicComponent } from "circuit-json"
+import { ImportedSolderPaste } from "lib/components/primitive-components/ImportedSolderPaste"
 import { CopperText } from "lib/components/primitive-components/CopperText"
 import { CourtyardCircle } from "lib/components/primitive-components/CourtyardCircle"
 import { CourtyardOutline } from "lib/components/primitive-components/CourtyardOutline"
@@ -257,6 +258,14 @@ export const createComponentsFromCircuitJson = (
     }
   }
 
+  type ImportedPcbSmtPadId = PcbSmtPad["pcb_smtpad_id"]
+  const smtPadsByImportedId = new Map<ImportedPcbSmtPadId, SmtPad[]>()
+  const addSmtPad = (importedId: ImportedPcbSmtPadId, smtPad: SmtPad) => {
+    components.push(smtPad)
+    const matchingPads = smtPadsByImportedId.get(importedId) ?? []
+    matchingPads.push(smtPad)
+    smtPadsByImportedId.set(importedId, matchingPads)
+  }
   for (const elm of circuitJson) {
     const resolvedPortHints =
       "port_hints" in elm
@@ -267,7 +276,8 @@ export const createComponentsFromCircuitJson = (
         : undefined
 
     if (elm.type === "pcb_smtpad" && elm.shape === "rect") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
@@ -281,7 +291,8 @@ export const createComponentsFromCircuitJson = (
         }),
       )
     } else if (elm.type === "pcb_smtpad" && elm.shape === "circle") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
@@ -293,7 +304,8 @@ export const createComponentsFromCircuitJson = (
         }),
       )
     } else if (elm.type === "pcb_smtpad" && elm.shape === "pill") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "pill",
@@ -307,7 +319,8 @@ export const createComponentsFromCircuitJson = (
         }),
       )
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_pill") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "rotated_pill",
@@ -322,7 +335,8 @@ export const createComponentsFromCircuitJson = (
         }),
       )
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_rect") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
@@ -337,7 +351,8 @@ export const createComponentsFromCircuitJson = (
         }),
       )
     } else if (elm.type === "pcb_smtpad" && elm.shape === "polygon") {
-      components.push(
+      addSmtPad(
+        elm.pcb_smtpad_id,
         new SmtPad({
           coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "polygon",
@@ -933,6 +948,27 @@ export const createComponentsFromCircuitJson = (
         )
       }
     }
+  }
+  for (const aperture of circuitJson) {
+    if (aperture.type !== "pcb_solder_paste") continue
+    const matchingPads = aperture.pcb_smtpad_id
+      ? smtPadsByImportedId.get(aperture.pcb_smtpad_id)
+      : undefined
+    if (aperture.pcb_smtpad_id && matchingPads?.length !== 1) {
+      throw new Error(
+        `Imported solder paste ${aperture.pcb_solder_paste_id} requires one pad for ${aperture.pcb_smtpad_id}, found ${matchingPads?.length ?? 0}`,
+      )
+    }
+    const linkedSmtPad = matchingPads?.[0]
+    const paste = new ImportedSolderPaste({
+      aperture,
+      pcbX: aperture.x,
+      pcbY: aperture.y,
+      pcbRotation: "ccw_rotation" in aperture ? aperture.ccw_rotation : 0,
+    })
+    paste.linkedSmtPad = linkedSmtPad
+    if (linkedSmtPad) linkedSmtPad.hasImportedSolderPaste = true
+    components.push(paste)
   }
   return components
 }

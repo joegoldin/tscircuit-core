@@ -6,6 +6,7 @@ const NON_PHYSICAL_PCB_PRIMITIVE_PREFIXES = [
   "PcbNote",
   "Courtyard",
   "FabricationNote",
+  "ImportedSolderPaste",
 ]
 
 export function getBoundsOfPcbComponents(components: PrimitiveComponent[]) {

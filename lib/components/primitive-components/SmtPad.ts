@@ -18,6 +18,7 @@ import { getAxisAlignedSizeFromRotatedRect } from "lib/utils/pcb/get-axis-aligne
 
 export class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
   pcb_smtpad_id: string | null = null
+  hasImportedSolderPaste = false
 
   matchedPort: Port | null = null
 
@@ -97,7 +98,8 @@ export class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
     const { db } = this.root!
     const { _parsedProps: props } = this
     const isCoveredWithSolderMask = props.coveredWithSolderMask ?? false
-    const shouldCreateSolderPaste = !isCoveredWithSolderMask
+    const shouldCreateSolderPaste =
+      !isCoveredWithSolderMask && !this.hasImportedSolderPaste
     const soldermaskMargin = props.solderMaskMargin
     const solderPasteMargin = props.solderPasteMargin
     // solderPasteMargin is absolute per side; without it the aperture keeps
@@ -521,22 +523,34 @@ export class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
 
   _setPositionFromLayout(newCenter: { x: number; y: number }) {
     const { db } = this.root!
+    const previousCenter = this._getPcbCircuitJsonBounds().center
     db.pcb_smtpad.update(this.pcb_smtpad_id!, {
       x: newCenter.x,
       y: newCenter.y,
     })
 
-    const solderPaste = db.pcb_solder_paste
-      .list()
-      .find((elm) => elm.pcb_smtpad_id === this.pcb_smtpad_id)
-    if (solderPaste) {
-      db.pcb_solder_paste.update(solderPaste.pcb_solder_paste_id, {
-        x: newCenter.x,
-        y: newCenter.y,
-      })
-    }
+    this._moveLinkedSolderPaste({
+      deltaX: newCenter.x - previousCenter.x,
+      deltaY: newCenter.y - previousCenter.y,
+    })
 
     this.matchedPort?._setPositionFromLayout(newCenter)
+  }
+
+  private _moveLinkedSolderPaste({
+    deltaX,
+    deltaY,
+  }: { deltaX: number; deltaY: number }): void {
+    const { db } = this.root!
+    const solderPastes = db.pcb_solder_paste
+      .list()
+      .filter((elm) => elm.pcb_smtpad_id === this.pcb_smtpad_id)
+    for (const solderPaste of solderPastes) {
+      db.pcb_solder_paste.update(solderPaste.pcb_solder_paste_id, {
+        x: solderPaste.x + deltaX,
+        y: solderPaste.y + deltaY,
+      })
+    }
   }
 
   _moveCircuitJsonElements({
@@ -564,6 +578,7 @@ export class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
           y: p.y + deltaY,
         })),
       })
+      this._moveLinkedSolderPaste({ deltaX, deltaY })
 
       const newCenter = {
         x: this._getPcbCircuitJsonBounds().center.x + deltaX / 2,
