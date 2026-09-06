@@ -99988,6 +99988,7 @@ declare class SilkscreenGraphic extends PrimitiveComponent<typeof silkscreenGrap
 
 declare class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
     pcb_smtpad_id: string | null;
+    hasImportedSolderPaste: boolean;
     matchedPort: Port | null;
     isPcbPrimitive: boolean;
     get config(): {
@@ -101010,6 +101011,7 @@ declare class SmtPad extends PrimitiveComponent<typeof smtPadProps> {
         x: number;
         y: number;
     }): void;
+    private _moveLinkedSolderPaste;
     _moveCircuitJsonElements({ deltaX, deltaY, }: {
         deltaX: number;
         deltaY: number;
