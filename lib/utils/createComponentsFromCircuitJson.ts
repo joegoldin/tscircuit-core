@@ -269,6 +269,7 @@ export const createComponentsFromCircuitJson = (
     if (elm.type === "pcb_smtpad" && elm.shape === "rect") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -282,6 +283,7 @@ export const createComponentsFromCircuitJson = (
     } else if (elm.type === "pcb_smtpad" && elm.shape === "circle") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -293,6 +295,7 @@ export const createComponentsFromCircuitJson = (
     } else if (elm.type === "pcb_smtpad" && elm.shape === "pill") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "pill",
           height: elm.height,
           width: elm.width,
@@ -306,6 +309,7 @@ export const createComponentsFromCircuitJson = (
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_pill") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "rotated_pill",
           height: elm.height,
           width: elm.width,
@@ -320,6 +324,7 @@ export const createComponentsFromCircuitJson = (
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_rect") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -334,6 +339,7 @@ export const createComponentsFromCircuitJson = (
     } else if (elm.type === "pcb_smtpad" && elm.shape === "polygon") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "polygon",
           points: elm.points,
           portHints: resolvedPortHints,
@@ -366,6 +372,7 @@ export const createComponentsFromCircuitJson = (
       if (elm.shape === "circle") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "circle",
@@ -377,6 +384,7 @@ export const createComponentsFromCircuitJson = (
       } else if (elm.shape === "circular_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "circular_hole_with_rect_pad",
@@ -392,6 +400,7 @@ export const createComponentsFromCircuitJson = (
       } else if (elm.shape === "pill" || elm.shape === "oval") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: elm.shape,
@@ -405,6 +414,7 @@ export const createComponentsFromCircuitJson = (
       } else if (elm.shape === "pill_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "pill_hole_with_rect_pad",
@@ -423,6 +433,7 @@ export const createComponentsFromCircuitJson = (
       } else if (elm.shape === "rotated_pill_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "pill_hole_with_rect_pad",
@@ -442,6 +453,7 @@ export const createComponentsFromCircuitJson = (
       } else if (elm.shape === "hole_with_polygon_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "hole_with_polygon_pad",

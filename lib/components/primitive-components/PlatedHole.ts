@@ -161,26 +161,28 @@ export class PlatedHole extends PrimitiveComponent<typeof platedHoleProps> {
       })
 
       this.pcb_plated_hole_id = pcb_plated_hole.pcb_plated_hole_id
-      db.pcb_solder_paste.insert({
-        layer: "top",
-        shape: "circle",
-        // @ts-ignore: no idea why this is triggering
-        radius: props.outerDiameter / 2,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
-      })
-      db.pcb_solder_paste.insert({
-        layer: "bottom",
-        shape: "circle",
-        // @ts-ignore: no idea why this is triggering
-        radius: props.outerDiameter / 2,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
-      })
+      if (!isCoveredWithSolderMask) {
+        db.pcb_solder_paste.insert({
+          layer: "top",
+          shape: "circle",
+          // @ts-ignore: no idea why this is triggering
+          radius: props.outerDiameter / 2,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
+        })
+        db.pcb_solder_paste.insert({
+          layer: "bottom",
+          shape: "circle",
+          // @ts-ignore: no idea why this is triggering
+          radius: props.outerDiameter / 2,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
+        })
+      }
     } else if (props.shape === "pill" && props.rectPad) {
       const pcb_plated_hole = db.pcb_plated_hole.insert({
         pcb_component_id,
@@ -235,28 +237,30 @@ export class PlatedHole extends PrimitiveComponent<typeof platedHoleProps> {
       } as PcbPlatedHoleOval)
 
       this.pcb_plated_hole_id = pcb_plated_hole.pcb_plated_hole_id
-      db.pcb_solder_paste.insert({
-        layer: "top",
-        shape: props.shape,
-        // @ts-ignore: no idea why this is triggering
-        width: props.outerWidth,
-        height: props.outerHeight,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
-      })
-      db.pcb_solder_paste.insert({
-        layer: "bottom",
-        shape: props.shape,
-        // @ts-ignore: no idea why this is triggering
-        width: props.outerWidth,
-        height: props.outerHeight,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
-      })
+      if (!isCoveredWithSolderMask) {
+        db.pcb_solder_paste.insert({
+          layer: "top",
+          shape: props.shape,
+          // @ts-ignore: no idea why this is triggering
+          width: props.outerWidth,
+          height: props.outerHeight,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
+        })
+        db.pcb_solder_paste.insert({
+          layer: "bottom",
+          shape: props.shape,
+          // @ts-ignore: no idea why this is triggering
+          width: props.outerWidth,
+          height: props.outerHeight,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? undefined,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? undefined,
+        })
+      }
     } else if (props.shape === "circular_hole_with_rect_pad") {
       const pcb_plated_hole = db.pcb_plated_hole.insert({
         pcb_component_id,

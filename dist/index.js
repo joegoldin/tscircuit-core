@@ -9979,26 +9979,28 @@ var PlatedHole = class extends PrimitiveComponent2 {
         pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
       });
       this.pcb_plated_hole_id = pcb_plated_hole.pcb_plated_hole_id;
-      db.pcb_solder_paste.insert({
-        layer: "top",
-        shape: "circle",
-        // @ts-ignore: no idea why this is triggering
-        radius: props.outerDiameter / 2,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
-      });
-      db.pcb_solder_paste.insert({
-        layer: "bottom",
-        shape: "circle",
-        // @ts-ignore: no idea why this is triggering
-        radius: props.outerDiameter / 2,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
-      });
+      if (!isCoveredWithSolderMask) {
+        db.pcb_solder_paste.insert({
+          layer: "top",
+          shape: "circle",
+          // @ts-ignore: no idea why this is triggering
+          radius: props.outerDiameter / 2,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
+        });
+        db.pcb_solder_paste.insert({
+          layer: "bottom",
+          shape: "circle",
+          // @ts-ignore: no idea why this is triggering
+          radius: props.outerDiameter / 2,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
+        });
+      }
     } else if (props.shape === "pill" && props.rectPad) {
       const pcb_plated_hole = db.pcb_plated_hole.insert({
         pcb_component_id,
@@ -10049,28 +10051,30 @@ var PlatedHole = class extends PrimitiveComponent2 {
         // NOTE: currently PcbPlatedHoleOval erroneously includes both the shape "pill" and "oval"
       });
       this.pcb_plated_hole_id = pcb_plated_hole.pcb_plated_hole_id;
-      db.pcb_solder_paste.insert({
-        layer: "top",
-        shape: props.shape,
-        // @ts-ignore: no idea why this is triggering
-        width: props.outerWidth,
-        height: props.outerHeight,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
-      });
-      db.pcb_solder_paste.insert({
-        layer: "bottom",
-        shape: props.shape,
-        // @ts-ignore: no idea why this is triggering
-        width: props.outerWidth,
-        height: props.outerHeight,
-        x: position.x,
-        y: position.y,
-        subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
-        pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
-      });
+      if (!isCoveredWithSolderMask) {
+        db.pcb_solder_paste.insert({
+          layer: "top",
+          shape: props.shape,
+          // @ts-ignore: no idea why this is triggering
+          width: props.outerWidth,
+          height: props.outerHeight,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
+        });
+        db.pcb_solder_paste.insert({
+          layer: "bottom",
+          shape: props.shape,
+          // @ts-ignore: no idea why this is triggering
+          width: props.outerWidth,
+          height: props.outerHeight,
+          x: position.x,
+          y: position.y,
+          subcircuit_id: subcircuit?.subcircuit_id ?? void 0,
+          pcb_group_id: this.getGroup()?.pcb_group_id ?? void 0
+        });
+      }
     } else if (props.shape === "circular_hole_with_rect_pad") {
       const pcb_plated_hole = db.pcb_plated_hole.insert({
         pcb_component_id,
@@ -11986,6 +11990,7 @@ var createComponentsFromCircuitJson = ({
     if (elm.type === "pcb_smtpad" && elm.shape === "rect") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -11999,6 +12004,7 @@ var createComponentsFromCircuitJson = ({
     } else if (elm.type === "pcb_smtpad" && elm.shape === "circle") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -12010,6 +12016,7 @@ var createComponentsFromCircuitJson = ({
     } else if (elm.type === "pcb_smtpad" && elm.shape === "pill") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "pill",
           height: elm.height,
           width: elm.width,
@@ -12023,6 +12030,7 @@ var createComponentsFromCircuitJson = ({
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_pill") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "rotated_pill",
           height: elm.height,
           width: elm.width,
@@ -12037,6 +12045,7 @@ var createComponentsFromCircuitJson = ({
     } else if (elm.type === "pcb_smtpad" && elm.shape === "rotated_rect") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           pcbX: elm.x,
           pcbY: elm.y,
           layer: elm.layer,
@@ -12051,6 +12060,7 @@ var createComponentsFromCircuitJson = ({
     } else if (elm.type === "pcb_smtpad" && elm.shape === "polygon") {
       components.push(
         new SmtPad({
+          coveredWithSolderMask: elm.is_covered_with_solder_mask,
           shape: "polygon",
           points: elm.points,
           portHints: resolvedPortHints,
@@ -12083,6 +12093,7 @@ var createComponentsFromCircuitJson = ({
       if (elm.shape === "circle") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "circle",
@@ -12094,6 +12105,7 @@ var createComponentsFromCircuitJson = ({
       } else if (elm.shape === "circular_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "circular_hole_with_rect_pad",
@@ -12109,6 +12121,7 @@ var createComponentsFromCircuitJson = ({
       } else if (elm.shape === "pill" || elm.shape === "oval") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: elm.shape,
@@ -12122,6 +12135,7 @@ var createComponentsFromCircuitJson = ({
       } else if (elm.shape === "pill_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "pill_hole_with_rect_pad",
@@ -12140,6 +12154,7 @@ var createComponentsFromCircuitJson = ({
       } else if (elm.shape === "rotated_pill_hole_with_rect_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "pill_hole_with_rect_pad",
@@ -12159,6 +12174,7 @@ var createComponentsFromCircuitJson = ({
       } else if (elm.shape === "hole_with_polygon_pad") {
         components.push(
           new PlatedHole({
+            coveredWithSolderMask: elm.is_covered_with_solder_mask,
             pcbX: elm.x,
             pcbY: elm.y,
             shape: "hole_with_polygon_pad",
