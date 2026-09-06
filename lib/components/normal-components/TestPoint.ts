@@ -1,5 +1,4 @@
 import { testpointProps } from "@tscircuit/props"
-import type { SourceSimpleTestPoint } from "circuit-json"
 import { FTYPE, type BaseSymbolName } from "lib/utils/constants"
 import { NormalComponent } from "../base-components/NormalComponent/NormalComponent"
 
@@ -100,7 +99,7 @@ export class TestPoint extends NormalComponent<typeof testpointProps> {
       height,
     } = this._getPropsWithDefaults()
 
-    const source_component = db.source_component.insert({
+    const sourceComponentInput = {
       ftype: FTYPE.simple_test_point,
       name: this.name,
       supplier_part_numbers: props.supplierPartNumbers,
@@ -113,7 +112,9 @@ export class TestPoint extends NormalComponent<typeof testpointProps> {
       height: height,
       are_pins_interchangeable: true,
       display_name: props.displayName,
-    } as SourceSimpleTestPoint)
+      do_not_place: props.doNotPlace ?? false,
+    }
+    const source_component = db.source_component.insert(sourceComponentInput)
     this.source_component_id = source_component.source_component_id
   }
 }
