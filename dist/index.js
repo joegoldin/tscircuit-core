@@ -58681,7 +58681,7 @@ var TestPoint = class extends NormalComponent3 {
       width,
       height
     } = this._getPropsWithDefaults();
-    const source_component = db.source_component.insert({
+    const sourceComponentInput = {
       ftype: FTYPE.simple_test_point,
       name: this.name,
       supplier_part_numbers: props.supplierPartNumbers,
@@ -58693,8 +58693,10 @@ var TestPoint = class extends NormalComponent3 {
       width,
       height,
       are_pins_interchangeable: true,
-      display_name: props.displayName
-    });
+      display_name: props.displayName,
+      do_not_place: props.doNotPlace ?? false
+    };
+    const source_component = db.source_component.insert(sourceComponentInput);
     this.source_component_id = source_component.source_component_id;
   }
 };
